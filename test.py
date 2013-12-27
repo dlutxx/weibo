@@ -30,18 +30,19 @@ class QTest(unittest.TestCase):
 
 
 @unittest.skipIf(CLIENT_ID is None or
-    CLIENT_SECRET is None or
-    REDIRECT_URI is None, '请更新配置信息以便测试授权类')
+                 CLIENT_SECRET is None or
+                 REDIRECT_URI is None,
+                 '请更新配置信息以便测试授权类')
 class OAuthTest(unittest.TestCase):
     def setUp(self):
-        self.auth = weibo.OAuth(KEY, URI, SEC)
+        self.auth = weibo.OAuth(CLIENT_ID, REDIRECT_URI, CLIENT_SECRET)
 
     def test_auth_url(self):
         url = self.auth.auth_url()
         self.assertTrue(url.startswith('http'))
 
     def test_access_token(self):
-        ret = self.auth.access_token(code)
+        ret = self.auth.access_token(CODE)
         err = '获取access_token失败: %s' % ret
         self.assertIn('access_token', ret, err)
 
@@ -56,8 +57,9 @@ class ClientTest(unittest.TestCase):
         self.assertIn('statuses', line)
 
     def test_update(self):
-        post = self.client.update("Lean and Tested Python Weibo"
-            " SDK from: https://github.com/dlutxx/weibo")
+        status = "Lean and Tested Python Weibo"\
+            " SDK from: https://github.com/dlutxx/weibo"
+        post = self.client.update(status)
         self.assertIn('mid', post)
 
 

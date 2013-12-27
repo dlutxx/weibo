@@ -8,14 +8,16 @@ Example Usage:
     # 登陆页,将用户浏览器重定向到 auth.auth_url() 进行授权
     >>> auth = OAuth(client_id=my_client_id, redirect_uri=myredirect_uri)
     >>> print(auth.auth_url(state="my_token", display="mobile"))
-    https://api.weibo.com/oauth2/authorize?client_id=123050457758183&redirect_uri=http://www.example.com/response&response_type=code
+    https://api.weibo.com/oauth2/authorize?client_id=123050457758183
+    &redirect_uri=http://www.example.com/response&response_type=code
 
     # 微博授权回调页面，用code换取access_token
     >>> code = request.GET['code']
     >>> auth = OAuth(client_id=my_client_id, client_sec=code,
                  redirect_uri=redirect_uri)
     >>> print(auth.access_token(code))
-    {"access_token": "ACCESS_TOKEN", "expires_in": 1234, "remind_in":"798114", "uid":"12341234"}
+    {"access_token": "ACCESS_TOKEN", "expires_in": 1234, "remind_in":
+    "798114", "uid":"12341234"}
 
     # 有了access_token，就可以实例化Client来操作微博了
     >>> client = Client(my_access_token)
@@ -31,7 +33,7 @@ __author__ = 'dlutxx@gmail.com'
 import json
 try:  # Python 3
     from urllib.request import urlopen, Request as _Request
-    from urllib.parse import urlencode, quote_plus
+    from urllib.parse import urlencode
 
     def Request(url, data=None, *args, **kwargs):
         if data:
@@ -39,7 +41,7 @@ try:  # Python 3
         return _Request(url, data, *args, **kwargs)
 except ImportError:  # Python 2
     from urllib2 import urlopen, Request
-    from urllib import urlencode, quote_plus
+    from urllib import urlencode
 
 
 # default charset for http requests and reponses
@@ -77,9 +79,10 @@ class OAuth(object):
     ''' 微博授权辅助类
 
     微博授权机制说明:
-    http://open.weibo.com/wiki/%E6%8E%88%E6%9D%83%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E
+    http://open.weibo.com/wiki/%E6%8E%88%E6%9D%83%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E # NOQA
     '''
     api = 'https://api.weibo.com/oauth2/'
+
     def __init__(self, client_id='', redirect_uri='', client_sec=''):
         '''client_sec 只在用code换取access_token时才需要'''
         self.client_id = client_id
