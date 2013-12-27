@@ -16,7 +16,7 @@ Example Usage:
                  redirect_uri=redirect_uri)
     >>> print(auth.access_token(code))
     {"access_token": "ACCESS_TOKEN", "expires_in": 1234, "remind_in":"798114", "uid":"12341234"}
-    
+
     # 有了access_token，就可以实例化Client来操作微博了
     >>> client = Client(my_access_token)
     >>> client.update('test weibo')

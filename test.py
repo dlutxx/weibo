@@ -5,10 +5,12 @@ import unittest
 import weibo
 
 
-KEY = '1604135309'
-SEC = 'f073e62f49afd48596f5885f063ba814'
-URI = 'http://idjango.sinaapp.com/oauth/weibo/auth'
-TOKEN = '2.00n7r9wBFsmYkB6fbbe79617L6uFMD'
+# 如果想测试SDK，请填写一下信息
+CLIENT_ID = None
+CLIENT_SECRET = None
+REDIRECT_URI = None
+CODE = None
+ACCESS_TOKEN = None
 
 
 class QTest(unittest.TestCase):
@@ -27,29 +29,35 @@ class QTest(unittest.TestCase):
         self.assertIn('X-Test', ret['headers'])
 
 
-@unittest.skip
+@unittest.skipIf(CLIENT_ID is None or
+    CLIENT_SECRET is None or
+    REDIRECT_URI is None, '请更新配置信息以便测试授权类')
 class OAuthTest(unittest.TestCase):
     def setUp(self):
         self.auth = weibo.OAuth(KEY, URI, SEC)
 
     def test_auth_url(self):
-        print(self.auth.auth_url())
+        url = self.auth.auth_url()
+        self.assertTrue(url.startswith('http'))
 
     def test_access_token(self):
-        print(self.auth.access_token('15635c3bb1e7361bf8bf3f56107af884'))
+        ret = self.auth.access_token(code)
+        err = '获取access_token失败: %s' % ret
+        self.assertIn('access_token', ret, err)
 
 
-@unittest.skip
+@unittest.skipIf(ACCESS_TOKEN is None, '请填写access_token以测试')
 class ClientTest(unittest.TestCase):
     def setUp(self):
-        self.client = weibo.Client(TOKEN)
+        self.client = weibo.Client(ACCESS_TOKEN)
 
     def test_home_line(self):
         line = self.client.home_line()
         self.assertIn('statuses', line)
 
     def test_update(self):
-        post = self.client.update("hahaha^_^")
+        post = self.client.update("Lean and Tested Python Weibo"
+            " SDK from: https://github.com/dlutxx/weibo")
         self.assertIn('mid', post)
 
 
