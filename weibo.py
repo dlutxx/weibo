@@ -145,8 +145,15 @@ class Client(object):
         data.setdefault('access_token', self.token)
         return q(self.uri + api + '.json', data)
 
-    def home_line(self, **opts):
-        return self.get('statuses/friends_timeline', **opts)
+    # 微博读取接口
+    def home_timeline(self, **opts):
+        return self.get('statuses/home_timeline', **opts)
 
-    def update(self, status):
-        return self.post('statuses/update', status=status)
+    def user_timeline(self, **opts):
+        return self.get('statuses/user_timeline', **opts)
+
+    def update(self, status_text):
+        return self.post('statuses/update', status=status_text)
+
+    def destroy(self, weibo_id):
+        return self.post('statuses/destroy', id=weibo_id)

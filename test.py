@@ -1,16 +1,32 @@
 #-*- encoding: utf-8 -*-
 from __future__ import print_function
 
+import sys
+import time
 import unittest
 import weibo
 
 
-# 如果想测试SDK，请填写一下信息
-CLIENT_ID = None
-CLIENT_SECRET = None
-REDIRECT_URI = None
-CODE = None
-ACCESS_TOKEN = None
+class _Config(object):
+    def __init__(self, client_id, client_secret, redirect_uri,
+                 access_token=None):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
+        self.access_token = access_token
+
+    def configed(self):
+        return (self.client_id is not None and
+               self.client_secret is not None and
+               self.redirect_uri is not None)
+
+# 如果想测试SDK，请填写以下信息
+# uid = 1780753881
+conf = _Config(client_id='1604135305',
+               client_secret='f073e62f45afd48596f5885f063ba814',
+               redirect_uri='http://idjango.sinaapp.com/oauth/weibo/auth',
+               access_token='2.00n7rVwBFsmYkB6fbbe79617L6uFMD'
+)
 
 
 class QTest(unittest.TestCase):
@@ -29,38 +45,41 @@ class QTest(unittest.TestCase):
         self.assertIn('X-Test', ret['headers'])
 
 
-@unittest.skipIf(CLIENT_ID is None or
-                 CLIENT_SECRET is None or
-                 REDIRECT_URI is None,
-                 '请更新配置信息以便测试授权类')
+@unittest.skipIf(not conf.configed(), '请更新配置信息以便测试授权类')
 class OAuthTest(unittest.TestCase):
-    def setUp(self):
-        self.auth = weibo.OAuth(CLIENT_ID, REDIRECT_URI, CLIENT_SECRET)
-
-    def test_auth_url(self):
-        url = self.auth.auth_url()
+    def test_auth(self):
+        auth = weibo.OAuth(conf.client_id, conf.redirect_uri,
+                           conf.client_secret)
+        url = auth.auth_url()
         self.assertTrue(url.startswith('http'))
+        print("点击此链接授权: %s" % url)
+        print("输入授权后url的code: ")
+        code = sys.stdin.readline().strip()
+        if code:
+            ret = auth.access_token(code)
+            err = '获取access_token失败: %s' % ret
+            self.assertIn('access_token', ret, err)
+            print(ret)
 
-    def test_access_token(self):
-        ret = self.auth.access_token(CODE)
-        err = '获取access_token失败: %s' % ret
-        self.assertIn('access_token', ret, err)
 
-
-@unittest.skipIf(ACCESS_TOKEN is None, '请填写access_token以测试')
+@unittest.skipIf(conf.access_token is None, '请填写access_token以测试')
 class ClientTest(unittest.TestCase):
     def setUp(self):
-        self.client = weibo.Client(ACCESS_TOKEN)
+        self.client = weibo.Client(conf.access_token)
 
-    def test_home_line(self):
-        line = self.client.home_line()
-        self.assertIn('statuses', line)
+    def test_home_timeline(self):
+        line = self.client.home_timeline()
+        self.assertIn('statuses', line, '获取home_timeline失败')
 
-    def test_update(self):
-        status = "Lean and Tested Python Weibo"\
-            " SDK from: https://github.com/dlutxx/weibo"
+    def test_update_and_destroy(self):
+        now = time.strftime('%Y%m%d %H:%M:%S')
+        status = "Lean and Tested Weibo SDK for Python 2 and"\
+            " 3: https://github.com/dlutxx/weibo , %s" % now
         post = self.client.update(status)
-        self.assertIn('mid', post)
+        self.assertIn('id', post)
+        ret = self.client.destroy(post['id'])
+        self.assertIn('id', ret)
+        self.assertEqual(post['id'], ret['id'])
 
 
 if __name__ == '__main__':
