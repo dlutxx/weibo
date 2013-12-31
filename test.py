@@ -17,16 +17,15 @@ class _Config(object):
 
     def configed(self):
         return (self.client_id is not None and
-               self.client_secret is not None and
-               self.redirect_uri is not None)
+                self.client_secret is not None and
+                self.redirect_uri is not None)
 
 # 如果想测试SDK，请填写以下信息
 # uid = 1780753881
 conf = _Config(client_id='1604135305',
                client_secret='f073e62f45afd48596f5885f063ba814',
                redirect_uri='http://idjango.sinaapp.com/oauth/weibo/auth',
-               access_token='2.00n7rVwBFsmYkB6fbbe79617L6uFMD'
-)
+               access_token='2.00n7rVwBFsmYkB6fbbe79617L6uFMD')
 
 
 class QTest(unittest.TestCase):
