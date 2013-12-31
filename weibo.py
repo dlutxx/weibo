@@ -150,6 +150,11 @@ class Client(object):
         return self.get('statuses/home_timeline', **opts)
 
     def user_timeline(self, **opts):
+        '''获取用户的微博
+
+        由于微博API的限制，最多只能获取最近2000条微博:
+        http://open.weibo.com/wiki/2/statuses/user_timeline
+        '''
         return self.get('statuses/user_timeline', **opts)
 
     def update(self, status_text):
