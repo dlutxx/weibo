@@ -31,6 +31,8 @@ __author__ = 'dlutxx@gmail.com'
 
 
 import json
+import functools
+
 try:  # Python 3
     from urllib.request import urlopen, Request as _Request
     from urllib.parse import urlencode
@@ -119,15 +121,28 @@ class OAuth(object):
         return q(OAuth.api + 'access_token', data)
 
 
+class cached_property(object):
+
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        val = instance.__dict__[self.func.__name__] = self.func(instance)
+        return val
+
+
 class Client(object):
     '''操作微博API的客户端
 
     你可以通过home_line, update等对应于微博api的方法操作api，
     也可以通过get/post方法,将api名称当做参数传入,来直接访问api.
     '''
+    uri = 'https://api.weibo.com/2/'
+
     def __init__(self, access_token):
         self.token = access_token
-        self.uri = 'https://api.weibo.com/2/'
 
     def get(self, api, **data):
         ''' 通过GET方式访问api
@@ -145,9 +160,31 @@ class Client(object):
         data.setdefault('access_token', self.token)
         return q(self.uri + api + '.json', data)
 
-    # 微博读取接口
+    user = cached_property(lambda self: User(self))
+    status = cached_property(lambda self: Status(self))
+    trend = cached_property(lambda self: Status(self))
+
+    
+class _Entity(object):
+
+    api_prefix = ''
+
+    def __init__(self, client):
+        self.client = client
+
+    def get(self, api, **kwargs):
+        return self.client.get('%s/%s' % (self.api_prefix, api), **kwargs)
+
+    def post(self, api, **kwargs):
+        return self.client.post('%s/%s' % (self.api_prefix, api), **kwargs)
+
+
+class Status(_Entity):
+
+    api_prefix = 'statuses'
+
     def home_timeline(self, **opts):
-        return self.get('statuses/home_timeline', **opts)
+        return self.get('home_timeline', **opts)
 
     def user_timeline(self, **opts):
         '''获取用户的微博
@@ -155,10 +192,31 @@ class Client(object):
         由于微博API的限制，最多只能获取最近2000条微博:
         http://open.weibo.com/wiki/2/statuses/user_timeline
         '''
-        return self.get('statuses/user_timeline', **opts)
+        return self.get('user_timeline', **opts)
 
     def update(self, status_text):
-        return self.post('statuses/update', status=status_text)
+        return self.post('update', status=status_text)
 
     def destroy(self, weibo_id):
-        return self.post('statuses/destroy', id=weibo_id)
+        return self.post('destroy', id=weibo_id)
+
+
+class User(_Entity):
+
+    api_prefix = 'users'
+    
+    def show(self, uid=None, screen_name=None):
+        if uid is not None:
+            return self.get('show', uid=uid)
+        if screen_name is not None:
+            return self.get('show', screen_name=screen_name)
+        raise ValueError("requires uid or screen_name")
+
+
+class Trend(_Entity):
+
+    api_prefix = 'trend'
+
+key = '1895143506'
+sec = '2f7a09c8dd22deba8d9f3e232a8153c9'
+url = 'http://rmweibo.sinaapp.com/user/login'
