@@ -31,7 +31,6 @@ __author__ = 'dlutxx@gmail.com'
 
 
 import json
-import functools
 
 try:  # Python 3
     from urllib.request import urlopen, Request as _Request
@@ -164,7 +163,7 @@ class Client(object):
     status = cached_property(lambda self: Status(self))
     trend = cached_property(lambda self: Status(self))
 
-    
+
 class _Entity(object):
 
     api_prefix = ''
@@ -204,7 +203,7 @@ class Status(_Entity):
 class User(_Entity):
 
     api_prefix = 'users'
-    
+
     def show(self, uid=None, screen_name=None):
         if uid is not None:
             return self.get('show', uid=uid)
@@ -217,6 +216,14 @@ class Trend(_Entity):
 
     api_prefix = 'trend'
 
+
 key = '1895143506'
 sec = '2f7a09c8dd22deba8d9f3e232a8153c9'
 url = 'http://rmweibo.sinaapp.com/user/login'
+
+
+def test():
+    auth = OAuth(key, url, sec)
+    code = yield auth.auth_url()
+    ak = auth.access_token(code)
+    yield Client(ak['access_token'])
