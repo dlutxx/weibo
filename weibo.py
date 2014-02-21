@@ -119,6 +119,15 @@ class OAuth(object):
         }
         return q(OAuth.api + 'access_token', data)
 
+    def token_info(self, token):
+        ''' get info about access_token
+
+        http://open.weibo.com/wiki/Oauth2/get_token_info
+        '''
+
+        data = {'access_token': token}
+        return q(OAuth.api + 'get_token_info', data=data)
+
 
 class cached_property(object):
 
@@ -142,6 +151,10 @@ class Client(object):
 
     def __init__(self, access_token):
         self.token = access_token
+
+    def token_info(self, token=None):
+        auth = OAuth()
+        return auth.token_info(token or self.token)
 
     def get(self, api, **data):
         ''' 通过GET方式访问api
