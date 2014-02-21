@@ -42,6 +42,8 @@ def _init_logger(filename='cli.log', level=logging.DEBUG):
     logger.setLevel(level)
     handler = logging.FileHandler(filename)
     handler.setLevel(level)
+    fmt = logging.Formatter('%(name)s %(levelname)s %(asctime)s %(msg)s')
+    handler.setFormatter(fmt)
     logger.addHandler(handler)
     return logger
 
@@ -108,7 +110,7 @@ class Homeline(Command):
     default_key = 'h'
 
     def __call__(self):
-        pass
+        logger.info('home line called')
 
 
 class Update(Command):
@@ -135,17 +137,22 @@ class App(object):
         self.weibo = weibo.Client(cfg.access_key)
         cmds.app = self
         self._stopped = False
+        self.scr = None
 
     def dispatch(self, ch):
         logger.debug('dispatch %d' % ch)
-        cmd = self.map_key(ch)
-        if cmd:
-            try:
-                self.run_cmd(cmd, ch)
-            except Exception as e:
-                logger.debug(e)
+        try:
+            cmd = self.map_key(ch)
+        except ValueError as e:
+            logger.error('undefined key %d' % ch)
+        try:
+            self.run_cmd(cmd, ch)
+        except Exception as e:
+            logger.error("error in command , ch = %d,  %s" % (ch, e))
 
     def map_key(self, ch):
+        if 0 > ch or ch > 255:
+            raise ValueError('ch = %d' % ch)
         ch = chr(ch)
         cmd_name = self.cfg['key.%s' % ch]
         if not cmd_name:
@@ -159,8 +166,13 @@ class App(object):
     def stop(self):
         self._stopped = True
 
+    def startup(self):
+        maxy, maxx = self.scr.getmaxyx()
+        self.scr.addstr(maxy-4, 4, '你好weibo '*10)
+
     def mainloop(self, stdscr):
         self.scr = stdscr
+        self.startup()
         while not self._stopped:
             ch = stdscr.getch()
             self.dispatch(ch)
