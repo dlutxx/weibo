@@ -109,8 +109,26 @@ class Homeline(Command):
 
     default_key = 'h'
 
+    def __init__(self, *args, **kwargs):
+        super(Homeline, self).__init__(*args, **kwargs)
+        self._statuses = None
+        self.status = self.app.weibo.status
+
     def __call__(self):
         logger.info('home line called')
+        self.fetch_homeline()
+        self.clear_screen()
+        self.display_statuses()
+
+    def fetch_homeline(self):
+        ret = self.status.home_timeline(count=50)
+        self._statuses = ret['statuses']
+
+    def clear_screen(self):
+        pass
+
+    def display_statuses(self):
+        pass
 
 
 class Update(Command):

@@ -236,7 +236,13 @@ url = 'http://rmweibo.sinaapp.com/user/login'
 
 
 def test():
+    import webbrowser
     auth = OAuth(key, url, sec)
-    code = yield auth.auth_url()
+    u = auth.auth_url()
+    try:
+        webbrowser.open(u)
+    except:
+        pass
+    code = yield u
     ak = auth.access_token(code)
     yield Client(ak['access_token'])
