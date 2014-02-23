@@ -145,6 +145,7 @@ class App(object):
             cmd = self.map_key(ch)
         except ValueError as e:
             logger.error('undefined key %d' % ch)
+            return
         try:
             self.run_cmd(cmd, ch)
         except Exception as e:
@@ -161,7 +162,8 @@ class App(object):
             return cmds.find(cmd_name)
 
     def run_cmd(self, cmd, ch):
-        cmd()
+        if cmd:
+            cmd()
 
     def stop(self):
         self._stopped = True
