@@ -35,13 +35,14 @@ import json
 try:  # Python 3
     from urllib.request import urlopen, Request as _Request
     from urllib.parse import urlencode
+    from urllib.error import HTTPError
 
     def Request(url, data=None, *args, **kwargs):
         if data:
             data = data.encode(DEFAULT_CHARSET)
         return _Request(url, data, *args, **kwargs)
 except ImportError:  # Python 2
-    from urllib2 import urlopen, Request
+    from urllib2 import urlopen, Request, HTTPError
     from urllib import urlencode
 
 
@@ -66,13 +67,18 @@ def q(url, data=None, headers=None, force_get=False):
         request = Request(url, None, headers or {})
     else:
         request = Request(url, data, headers or {})
-    response = urlopen(request)
+
+    try:
+        response = urlopen(request)
+    except HTTPError as e:
+        raise APIError(e)
+
     if response.msg != 'OK':
-        raise HttpError(response)
+        raise APIError(response)
     return json.loads(response.read().decode(DEFAULT_CHARSET))
 
 
-class HttpError(Exception):
+class APIError(Exception):
     pass
 
 

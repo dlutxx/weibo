@@ -37,6 +37,24 @@ def with_meta(cls):
 ''', globals())
 
 
+def slicetext(txt, chunksize=60, encoding='utf8'):
+    pos = end = 0
+    while True:
+        length = 0
+        while length<chunksize and txt[end:]:
+            if ord(txt[end]) > 255:
+                length += 2
+            else:
+                length += 1
+            end += 1
+            if length == chunksize-1 and txt[end:] and ord(txt[end]) > 255:
+                break
+        yield txt[pos:end]
+        if not txt[end:]:
+            break
+        pos = end
+
+
 def _init_logger(filename='cli.log', level=logging.DEBUG):
     logger = logging.getLogger('cliweibo')
     logger.setLevel(level)
@@ -113,6 +131,12 @@ class Homeline(Command):
         super(Homeline, self).__init__(*args, **kwargs)
         self._statuses = None
         self.status = self.app.weibo.status
+        self.init_window()
+
+    def init_window(self):
+        self._h = 32
+        self._w = 70
+        self.win = self.app.scr.subwin(self._h, self._w, 0, 0)
 
     def __call__(self):
         logger.info('home line called')
@@ -125,10 +149,32 @@ class Homeline(Command):
         self._statuses = ret['statuses']
 
     def clear_screen(self):
-        pass
+        self.win.clear()
+        self.win.refresh()
+
+    def show_one(self, status, y):
+        text = '@%s: %s' % (status['user']['name'], status['text'])
+        retweet  = status.get('retweeted_status', None)
+        if retweet:
+            text += '//@%s: %s' % (retweet['user']['name'], retweet['text'])
+
+        for chunk in slicetext(text, 60):
+            self.win.addstr(y, 0, chunk)
+            y += 1
+            if y > self._h:
+                break
+        if y < self._h:
+            self.win.addstr(y, 0, ' ')
+            y += 1
+        return y
 
     def display_statuses(self):
-        pass
+        l = 0
+        for st in self._statuses:
+            l = self.show_one(st, l)
+            if l >= self._h:
+                break
+        self.win.refresh()
 
 
 class Update(Command):
@@ -152,7 +198,7 @@ class App(object):
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.weibo = weibo.Client(cfg.access_key)
+        self.weibo = weibo.Client(cfg['auth.access_key'])
         cmds.app = self
         self._stopped = False
         self.scr = None
@@ -166,8 +212,11 @@ class App(object):
             return
         try:
             self.run_cmd(cmd, ch)
+        except weibo.APIError as e:
+            logger.error("error in command, ch=%d, %s" % (ch, e.args[0].read()))
         except Exception as e:
-            logger.error("error in command , ch = %d,  %s" % (ch, e))
+            logger.error("error in command , ch = %d,  %s" % (ch, e),
+                         exc_info=True)
 
     def map_key(self, ch):
         if 0 > ch or ch > 255:
@@ -188,7 +237,7 @@ class App(object):
 
     def startup(self):
         maxy, maxx = self.scr.getmaxyx()
-        self.scr.addstr(maxy-4, 4, '你好weibo '*10)
+        self.scr.addstr(maxy-4, 4, '欢迎使用terminal weibo！')
 
     def mainloop(self, stdscr):
         self.scr = stdscr
