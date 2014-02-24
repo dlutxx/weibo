@@ -134,8 +134,8 @@ class Homeline(Command):
         self.init_window()
 
     def init_window(self):
-        self._h = 32
-        self._w = 70
+        self._h = 36
+        self._w = 80
         self.win = self.app.scr.subwin(self._h, self._w, 0, 0)
 
     def __call__(self):
@@ -158,7 +158,7 @@ class Homeline(Command):
         if retweet:
             text += '//@%s: %s' % (retweet['user']['name'], retweet['text'])
 
-        for chunk in slicetext(text, 60):
+        for chunk in slicetext(text, self._w-1):
             self.win.addstr(y, 0, chunk)
             y += 1
             if y > self._h:
